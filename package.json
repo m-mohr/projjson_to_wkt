@@ -1,6 +1,6 @@
 {
   "name": "projjson-to-wkt",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "JavaScript library to convert PROJJSON to a WKT1 or WKT2 string",
   "author": "Matthias Mohr",
   "license": "MIT",
