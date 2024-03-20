@@ -1,0 +1,8 @@
+GEOGCS["NAD83",
+    DATUM["North American Datum 1983",
+        SPHEROID["GRS 1980",6378137,298.257222101]],
+    PRIMEM["Greenwich",0],
+    UNIT["degree",0.0174532925199433],
+    AXIS["Geodetic latitude (Lat)",NORTH],
+    AXIS["Geodetic longitude (Lon)",EAST],
+    AUTHORITY["EPSG","4269"]]

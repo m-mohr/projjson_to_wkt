@@ -1,16 +1,34 @@
-const WKT1 = "WKT1";
-const WKT2_2019 = "WKT2:2019";
-
 const DEG_TO_RAD = 0.0174532925199433;
 
-class PROJJSONToWKT {
-    constructor(format = null, singleLine = false) {
-        if (![WKT1, WKT2_2019].includes(format)) {
+/**
+ * Converter to transform PROJJSON to WKT1 or WKT2:2019.
+ */
+class ProjJsonConverter {
+
+    /**
+     * WKT1
+     * @type {string}
+     */
+    static WKT1 = "WKT1";
+    /**
+     * WKT2:2019
+     * @type {string}
+     */
+    static WKT2_2019 = "WKT2:2019";
+
+    /**
+     * Create a new Converter instance.
+     * 
+     * @param {string} format The WKT format to use, either ProjJsonConverter.WKT1 or ProjJsonConverter.WKT2_2019.
+     * @param {string} lineSep Line separator (default: \r\n), also enables indentation. Use an empty string to disable indentation and line breaks.
+     */
+    constructor(format = ProjJsonConverter.WKT2_2019, lineSep = "\r\n") {
+        if (![ProjJsonConverter.WKT1, ProjJsonConverter.WKT2_2019].includes(format)) {
             throw new Error("Unsupported WKT format");
         }
         this.format = format;
-        this.singleLine = singleLine;
-        this.indentationByLevel = singleLine ? "" : "    ";
+        this.lineSep = lineSep;
+        this.indentationByLevel = lineSep.length === 0 ? "" : "    ";
         this.wkt = "";
         this.stackHasValues = [];
         this.indentation = "";
@@ -47,9 +65,7 @@ class PROJJSONToWKT {
             } else {
                 this.stackHasValues[this.stackHasValues.length - 1] = true;
             }
-            if (!this.singleLine) {
-                this.wkt += "\n";
-            }
+            this.wkt += this.lineSep;
         }
         this.wkt += this.indentation;
         this.wkt += name;
@@ -90,7 +106,7 @@ class PROJJSONToWKT {
     }
 
     idToWkt(id) {
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             this.startNode("AUTHORITY");
             this.addQuotedString(id["authority"]);
             const code = id["code"];
@@ -110,7 +126,7 @@ class PROJJSONToWKT {
     }
 
     objectUsageToWkt(obj) {
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             const scope = obj.scope !== undefined ? obj.scope : null;
             const area = obj.area !== undefined ? obj.area : null;
             const bbox = obj.bbox !== undefined ? obj.bbox : null;
@@ -146,14 +162,14 @@ class PROJJSONToWKT {
         let id = obj.id !== undefined ? obj.id : null;
         if (id) {
             this.idToWkt(id);
-        } else if (this.format !== WKT1) {
+        } else if (this.format !== ProjJsonConverter.WKT1) {
             const ids = obj.ids !== undefined ? obj.ids : null;
             if (ids) {
                 ids.forEach(id => this.idToWkt(id));
             }
         }
     
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             const remarks = obj.remarks !== undefined ? obj.remarks : null;
             if (remarks) {
                 this.startNode("REMARK");
@@ -164,7 +180,7 @@ class PROJJSONToWKT {
     }
 
     ellipsoidToWkt(ellipsoid) {
-        this.startNode(this.format === WKT1 ? "SPHEROID" : "ELLIPSOID");
+        this.startNode(this.format === ProjJsonConverter.WKT1 ? "SPHEROID" : "ELLIPSOID");
         this.addQuotedString(ellipsoid.name);
         const semiMajorAxis = ellipsoid.semi_major_axis;
         let [a, unit, convFactor] = this.getValueUnit(semiMajorAxis, "metre");
@@ -186,10 +202,10 @@ class PROJJSONToWKT {
             throw new Error("semi_minor_axis or inverse_flattening missing in ellipsoid");
         }
     
-        if (convFactor !== 1 && this.format === WKT1) {
+        if (convFactor !== 1 && this.format === ProjJsonConverter.WKT1) {
             throw new Error('conv_factor != 1 unsupported for WKT1');
         }
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.startNode("LENGTHUNIT");
             this.addQuotedString(unit);
             this.add(this.floatToStr(convFactor));
@@ -206,7 +222,7 @@ class PROJJSONToWKT {
         let unit, convFactor;
         [longitude, unit, convFactor] = this.getValueUnit(longitude, "degree");
         this.add(this.floatToStr(longitude));
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.unitToWkt({
                 type: "AngularUnit",
                 name: unit,
@@ -218,7 +234,7 @@ class PROJJSONToWKT {
     }
     
     datumToWkt(datum) {
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             const type = datum.type !== undefined ? datum.type : null;
             if (type && type === "DynamicGeodeticReferenceFrame") {
                 this.startNode("DYNAMIC");
@@ -243,7 +259,7 @@ class PROJJSONToWKT {
     }
     
     datumEnsembleToWkt(ensemble) {
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             this.startNode("DATUM");
             this.addQuotedString(ensemble.name.replace(" ensemble", ""));
             this.ellipsoidToWkt(ensemble.ellipsoid);
@@ -281,7 +297,7 @@ class PROJJSONToWKT {
         const name = unit.name;
         const convFactor = unit.conversion_factor;
         let keyword;
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             keyword = "UNIT";
         } else if (type === "AngularUnit") {
             keyword = "ANGLEUNIT";
@@ -310,7 +326,7 @@ class PROJJSONToWKT {
         let longitude = pm.longitude;
         [longitude, unit, convFactor] = this.getValueUnit(longitude, "degree");
         this.add(this.floatToStr(longitude));
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.unitToWkt({ type: "AngularUnit", name: unit, conversion_factor: convFactor });
         }
         this.objectUsageToWkt(pm);
@@ -320,12 +336,12 @@ class PROJJSONToWKT {
     axisToWkt(axis) {
         this.startNode("AXIS");
         let name = axis.name;
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             name = name[0].toLowerCase() + name.slice(1);
         }
         this.addQuotedString(`${name} (${axis.abbreviation})`);
         let direction = axis.direction;
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.add(direction);
         } else {
             direction = direction.toUpperCase();
@@ -335,22 +351,22 @@ class PROJJSONToWKT {
             this.add(direction);
         }
         const meridian = axis.meridian;
-        if (meridian && this.format !== WKT1) {
+        if (meridian && this.format !== ProjJsonConverter.WKT1) {
             this.meridianToWkt(meridian);
         }
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.unitToWkt(axis.unit);
         }
         this.endNode();
     }
 
     coordinateSystemToWkt(cs) {
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.startNode("CS");
             this.add(cs.subtype);
         }
         const axisList = cs.axis;
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.add(String(axisList.length));
             this.endNode();
             this.startPseudoNode();
@@ -360,7 +376,7 @@ class PROJJSONToWKT {
         for (let axis of axisList) {
             this.axisToWkt(axis);
         }
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.endPseudoNode();
         }
     }
@@ -368,7 +384,7 @@ class PROJJSONToWKT {
     geodeticCrsToWkt(crs, keyword = null, emitCs = true) {
         if (keyword === null) {
             const type = crs.type;
-            if (this.format === WKT1) {
+            if (this.format === ProjJsonConverter.WKT1) {
                 keyword = type === "GeographicCRS" ? "GEOGCS" : "GEOCCS";
             } else {
                 keyword = type === "GeographicCRS" ? "GEOGCRS" : "GEODCRS";
@@ -382,13 +398,13 @@ class PROJJSONToWKT {
             const pm = datum.prime_meridian !== undefined ? datum.prime_meridian : null;
             if (pm) {
                 this.primeMeridianToWkt(pm);
-            } else if (this.format === WKT1) {
+            } else if (this.format === ProjJsonConverter.WKT1) {
                 this.primeMeridianToWkt({ name: "Greenwich", longitude: 0 });
             }
         } else {
             const datumEnsemble = crs.datum_ensemble;
             this.datumEnsembleToWkt(datumEnsemble);
-            if (this.format === WKT1) {
+            if (this.format === ProjJsonConverter.WKT1) {
                 this.primeMeridianToWkt({ name: "Greenwich", longitude: 0 });
             }
         }
@@ -400,7 +416,7 @@ class PROJJSONToWKT {
     }
 
     derivedGeodeticCrsToWkt(crs) {
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             throw new Error(`${crs.type} unsupported in WKT1`);
         }
     
@@ -434,7 +450,7 @@ class PROJJSONToWKT {
             this.startNode("PARAMETER");
             this.addQuotedString(parameter.name);
             this.add(this.floatToStr(value));
-            if (this.format !== WKT1) {
+            if (this.format !== ProjJsonConverter.WKT1) {
                 this.unitToWkt(parameter.unit);
                 this.objectUsageToWkt(parameter);
             }
@@ -443,7 +459,7 @@ class PROJJSONToWKT {
     }
     
     conversionToWkt(conversion, keyword = "CONVERSION") {
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             this.startNode(keyword);
             this.addQuotedString(conversion.name);
             this.methodToWkt(conversion.method);
@@ -469,13 +485,14 @@ class PROJJSONToWKT {
     }
 
     projectedCrsToWkt(crs) {
-        this.startNode(this.format !== WKT1 ? "PROJCRS" : "PROJCS");
+        let isWkt1 = this.format === ProjJsonConverter.WKT1;
+        this.startNode(!isWkt1 ? "PROJCRS" : "PROJCS");
         this.addQuotedString(crs.name);
         const baseCrs = crs.base_crs;
         const baseKeyword = baseCrs.coordinate_system.subtype === "ellipsoidal"
-            ? this.format !== WKT1 ? "BASEGEOGCRS" : "GEOGCS"
-            : this.format !== WKT1 ? "BASEGEODCRS" : "GEOCCS";
-        this.geodeticCrsToWkt(baseCrs, baseKeyword, this.format === WKT1);
+            ? !isWkt1 ? "BASEGEOGCRS" : "GEOGCS"
+            : !isWkt1 ? "BASEGEODCRS" : "GEOCCS";
+        this.geodeticCrsToWkt(baseCrs, baseKeyword, isWkt1);
         this.conversionToWkt(crs.conversion);
         this.coordinateSystemToWkt(crs.coordinate_system);
         this.objectUsageToWkt(crs);
@@ -483,7 +500,7 @@ class PROJJSONToWKT {
     }
     
     verticalDatumToWkt(datum) {
-        if (this.format !== WKT1) {
+        if (this.format !== ProjJsonConverter.WKT1) {
             const type = datum.type !== undefined ? datum.type : null;
             if (type && type === "DynamicVerticalReferenceFrame") {
                 this.startNode("DYNAMIC");
@@ -494,9 +511,9 @@ class PROJJSONToWKT {
             }
         }
     
-        this.startNode(this.format !== WKT1 ? "VDATUM" : "VERT_DATUM");
+        this.startNode(this.format !== ProjJsonConverter.WKT1 ? "VDATUM" : "VERT_DATUM");
         this.addQuotedString(datum.name);
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             this.add("2005");
         }
         this.objectUsageToWkt(datum);
@@ -504,7 +521,7 @@ class PROJJSONToWKT {
     }
 
     verticalDatumEnsembleToWkt(ensemble) {
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.WKT1) {
             this.startNode("VERT_DATUM");
             this.addQuotedString(ensemble.name);
             this.add("2005");
@@ -529,7 +546,7 @@ class PROJJSONToWKT {
     }
     
     verticalCrsToWkt(crs) {
-        this.startNode(this.format !== WKT1 ? "VERTCRS" : "VERT_CS");
+        this.startNode(this.format !== ProjJsonConverter.WKT1 ? "VERTCRS" : "VERT_CS");
         this.addQuotedString(crs.name);
         const datum = crs.datum !== undefined ? crs.datum : null;
         if (datum) {
@@ -544,7 +561,7 @@ class PROJJSONToWKT {
     }
 
     compoundCrsToWkt(crs) {
-        this.startNode(this.format !== WKT1 ? "COMPOUNDCRS" : "COMPD_CS");
+        this.startNode(this.format !== ProjJsonConverter.WKT1 ? "COMPOUNDCRS" : "COMPD_CS");
         this.addQuotedString(crs.name);
         const components = crs.components;
         components.forEach(component => {
@@ -567,7 +584,7 @@ class PROJJSONToWKT {
     }
     
     boundCrsToWkt(crs) {
-        if (this.format === WKT1) {
+        if (this.format === ProjJsonConverter.ProjJsonConverter.WKT1) {
             throw new Error("BoundCRS unsupported in WKT1");
         }
     
@@ -582,6 +599,12 @@ class PROJJSONToWKT {
         this.endNode();
     }
 
+    /**
+     * Converts to the WKT representation.
+     * 
+     * @param {object} projjson PROJJSON object to convert.
+     * @returns {string} WKT string
+     */
     toWkt(projjson) {
         const type = projjson.type;
         if (["GeodeticCRS", "GeographicCRS"].includes(type)) {
@@ -601,17 +624,32 @@ class PROJJSONToWKT {
         }
     
         return this.wkt;
-    }    
+    }
+
+    /**
+     * Convert PROJJSON to WKT1.
+     * 
+     * @param {object} projjson PROJJSON object to convert.
+     * @param {string} lineSep Line separator (default: \r\n), also enables indentation. Use an empty string to disable indentation and line breaks.
+     * @returns {string} WKT1 string
+     */
+    static toWkt1(projjson, lineSep = "\r\n") {
+        const converter = new ProjJsonConverter(ProjJsonConverter.WKT1, lineSep);
+        return converter.toWkt(projjson);
+    }
+
+    /**
+     * Convert PROJJSON to WKT2:2019.
+     * 
+     * @param {object} projjson PROJJSON object to convert.
+     * @param {string} lineSep Line separator (default: \r\n), also enables indentation. Use an empty string to disable indentation and line breaks.
+     * @returns {string} WKT2:2019 string
+     */
+    static toWkt2(projjson, lineSep = "\r\n") {
+        const converter = new ProjJsonConverter(ProjJsonConverter.WKT2_2019, lineSep);
+        return converter.toWkt(projjson);
+    }
 
 }
 
-function toWkt(projjson, format = WKT2_2019, singleLine = false) {
-    return new PROJJSONToWKT(format, singleLine).toWkt(projjson);
-}
-
-module.exports = {
-    toWkt,
-    WKT1,
-    WKT2_2019,
-    PROJJSONToWKT
-};
+module.exports = ProjJsonConverter;

@@ -1,0 +1,16 @@
+GEOGCRS["ITRF2020",
+    DYNAMIC[
+        FRAMEEPOCH[2015]],
+    DATUM["International Terrestrial Reference Frame 2020",
+        ELLIPSOID["GRS 1980",6378137,298.257222101,
+            LENGTHUNIT["metre",1]]],
+    CS[ellipsoidal,2],
+        AXIS["geodetic latitude (Lat)",north,
+            ANGLEUNIT["degree",0.0174532925199433]],
+        AXIS["geodetic longitude (Lon)",east,
+            ANGLEUNIT["degree",0.0174532925199433]],
+    USAGE[
+        SCOPE["Geodesy."],
+        AREA["World."],
+        BBOX[-90,-180,90,180]],
+    ID["EPSG",9990]]

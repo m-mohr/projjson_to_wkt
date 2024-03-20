@@ -1,0 +1,5 @@
+VERT_CS["RH2000 height",
+    VERT_DATUM["Rikets hojdsystem 2000",2005],
+    UNIT["metre",1],
+    AXIS["Gravity-related height (H)",UP],
+    AUTHORITY["EPSG","5613"]]

@@ -1,16 +1,30 @@
 {
-  "name": "projjson_to_wkt",
+  "name": "projjson-to-wkt",
   "version": "1.0.0",
-  "description": "projjson_to_wkt - Python library to convert a PROJJSON string to WKT",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
+  "description": "JavaScript library to convert PROJJSON to a WKT1 or WKT2 string",
+  "author": "Matthias Mohr",
+  "license": "MIT",
+  "keywords": [
+    "projjson",
+    "wkt",
+    "wkt1",
+    "wkt2"
+  ],
+  "homepage": "https://github.com/m-mohr/projjson_to_wkt",
+  "bugs": {
+    "url": "https://github.com/m-mohr/projjson_to_wkt/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m-mohr/projjson_to_wkt.git"
+  },
+  "main": "src/index.js",
+  "files": [
+    "src/"
+  ],
   "scripts": {
     "test": "jest"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "jest": "^29.7.0"
   }
