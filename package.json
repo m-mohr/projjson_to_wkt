@@ -1,0 +1,17 @@
+{
+  "name": "projjson_to_wkt",
+  "version": "1.0.0",
+  "description": "projjson_to_wkt - Python library to convert a PROJJSON string to WKT",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
