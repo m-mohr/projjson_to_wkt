@@ -16,6 +16,14 @@ VerticalCRS, CompoundCRS, DerivedGeodeticCRS and DerivedGeographicCRS.
 
 ## Usage
 
+Add to your project:
+
+```bash
+npm install projjson-to-wkt
+```
+
+Add to your code:
+
 ```js
 const Converter = require('projjson-to-wkt');
 
